@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema FV Residencial — SolarDim</title>
+
+  <!-- Leaflet (mapa) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Chart.js (gráficas) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <!-- Estilos propios -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!-- HEADER / LOGO                                                -->
+<!-- ============================================================ -->
+<header class="app-header">
+  <div class="app-brand">
+    <div class="app-logo"></div>
+    <div>
+      <h1>Sistema de Dimensionamiento Fotovoltaico</h1>
+      <p>Sistema FV Residencial</p>
+    </div>
+  </div>
+  <div class="app-demanda">
+    <span>Demanda actual</span>
+    <strong id="demandaHeader">0.00</strong>
+    <span>kWh/día</span>
+  </div>
+</header>
+
+<!-- ============================================================ -->
+<!-- MENÚ PRINCIPAL DE MÓDULOS                                    -->
+<!-- ============================================================ -->
+<nav class="modulo-menu">
+  <button class="modulo-btn activo" data-modulo="modulo1">
+    <span class="modulo-num">1</span>
+    <span class="modulo-texto">
+      <strong>Sistema FV</strong>
+      <small>Dimensionamiento por coordenadas</small>
+    </span>
+  </button>
+  <button class="modulo-btn" data-modulo="modulo2">
+    <span class="modulo-num">2</span>
+    <span class="modulo-texto">
+      <strong>Perfil de Vivienda</strong>
+      <small>Caracterización de cargas (M3)</small>
+    </span>
+  </button>
+  <button class="modulo-btn" data-modulo="modulo3">
+    <span class="modulo-num">3</span>
+    <span class="modulo-texto">
+      <strong>Selección de Tecnología</strong>
+      <small>TOPCon / Mono PERC / Bifacial / HJT (M4)</small>
+    </span>
+  </button>
+  <button class="modulo-btn" data-modulo="modulo4">
+    <span class="modulo-num">4</span>
+    <span class="modulo-texto">
+      <strong>Resultados del Dimensionamiento</strong>
+      <small>Memoria de cálculo (M5)</small>
+    </span>
+  </button>
+</nav>
+
+<!-- ============================================================ -->
+<!-- MÓDULO 1: SISTEMA FV (lo que ya teníamos)                    -->
+<!-- ============================================================ -->
+<div id="modulo1" class="modulo-panel activo">
+
+  <!-- Aquí va TODO el contenido anterior del <main class="app-layout"> -->
+  <main class="app-layout">
+
+    <section class="panel-mapa">
+      <div id="mapa"></div>
+      <div class="mapa-footer">
+        <label>Dirección:</label>
+        <input type="text" id="direccion" placeholder="Ej. Tequesquitengo, Morelos">
+        <button class="btn-ir">Ir</button>
+        <label>Lat/Lon:</label>
+        <input type="text" id="latlon-display" placeholder="—, —" readonly>
+      </div>
+    </section>
+
+    <aside class="panel-menu">
+      <h2 class="menu-titulo">Herramientas</h2>
+      <ul class="menu-lista">
+        <li class="menu-item activo" data-vista="conectado-red">
+          <span class="bullet azul"></span> CONECTADO A RED
+        </li>
+        <li class="menu-item" data-vista="fv-seguimiento">
+          <span class="bullet naranja"></span> FV CON SEGUIMIENTO
+        </li>
+        <li class="menu-item" data-vista="fv-autonomo">
+          <span class="bullet naranja"></span> FV AUTÓNOMO
+        </li>
+        <li class="menu-item" data-vista="datos-mensuales">
+          <span class="bullet gris"></span> DATOS MENSUALES
+        </li>
+        <li class="menu-item" data-vista="datos-diarios">
+          <span class="bullet gris"></span> DATOS DIARIOS
+        </li>
+        <li class="menu-item" data-vista="datos-horarios">
+          <span class="bullet gris"></span> DATOS HORARIOS
+        </li>
+        <li class="menu-item" data-vista="tmy">
+          <span class="bullet verde"></span> TMY
+        </li>
+      </ul>
+    </aside>
+
+    <section class="panel-parametros">
+
+      <div class="cursor-info">
+        <p><strong>Cursor:</strong></p>
+        <p>Seleccionado: <span id="cursor-coords">—, —</span></p>
+        <p>Elevación (m): <span id="cursor-elev">—</span></p>
+        <p>PVGIS ver. <span class="version">5.3</span></p>
+      </div>
+
+      <div class="card-titulo">📍 COORDENADAS DEL SITIO</div>
+
+      <div class="form-grid">
+        <label for="lat">Latitud (°):</label>
+        <input type="number" id="lat" step="0.000001" min="-90" max="90"
+               placeholder="Ej. 18.645000">
+        <label for="lon">Longitud (°):</label>
+        <input type="number" id="lon" step="0.000001" min="-180" max="180"
+               placeholder="Ej. -99.256000">
+        <label for="alt">Altitud (m):</label>
+        <input type="number" id="alt" min="0" max="8000"
+               placeholder="Ej. 979">
+      </div>
+
+      <div class="card-titulo">☀️ DATOS MENSUALES DE IRRADIACIÓN</div>
+
+      <div class="form-grid">
+        <label for="baseDatos">Base de datos de radiación solar:</label>
+        <select id="baseDatos">
+          <option value="PVGIS-ERA5" selected>PVGIS-ERA5</option>
+          <option value="PVGIS-SARAH3">PVGIS-SARAH3</option>
+        </select>
+
+        <label for="anioInicio">Año inicial:</label>
+        <select id="anioInicio">
+          <option value="">— Selecciona —</option>
+        </select>
+
+        <label for="anioFin">Año final:</label>
+        <select id="anioFin">
+          <option value="">— Selecciona —</option>
+        </select>
+      </div>
+
+      <div class="form-section">
+        <p class="section-label">Irradiación:</p>
+        <label class="check"><input type="checkbox" id="irrGlobal" checked> Irradiación global horizontal</label>
+        <label class="check"><input type="checkbox" id="irrDirecta"> Irradiación directa normal</label>
+        <label class="check"><input type="checkbox" id="irrOptimo"> Irradiación global con el ángulo óptimo</label>
+        <label class="check"><input type="checkbox" id="irrAngulo"> Irradiación global con el ángulo:
+          <input type="number" id="angulo" min="0" max="90" placeholder="(0-90)" disabled>
+        </label>
+      </div>
+
+      <div class="form-section">
+        <p class="section-label">Ratio:</p>
+        <label class="check"><input type="checkbox" id="ratioDifusa"> Ratio difusa/global</label>
+      </div>
+
+      <div class="form-section">
+        <p class="section-label">Temperatura:</p>
+        <label class="check"><input type="checkbox" id="tempMedia"> Temperatura media</label>
+      </div>
+
+      <button id="btnVisualizar" class="btn-visualizar">
+        👁️ Visualizar resultados
+      </button>
+
+      <div class="botones-export">
+        <button class="btn-export" id="btnCSV">⬇️ CSV</button>
+        <button class="btn-export" id="btnJSON">⬇️ JSON</button>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- Sección de resultados (gráfica) -->
+  <section id="seccionResultados" class="panel-resultados oculto">
+    <div class="resultados-header">
+      <h2>DATOS MENSUALES DE IRRADIACIÓN: RESULTADOS</h2>
+      <div class="tabs-resultados">
+        <button class="tab activo">☀️ Radiación</button>
+        <button class="tab">🌤️ Difusa/Glob</button>
+        <button class="tab">🌡️ Temperatura</button>
+        <button class="tab">ℹ️ Info</button>
+        <button class="tab">📄 PDF</button>
+      </div>
+    </div>
+
+    <div class="resultados-body">
+      <aside class="resumen-lateral">
+        <h3>Resumen</h3>
+        <div class="resumen-contenido">
+          <p><strong>Localización [Lat/Lon]:</strong></p>
+          <p id="res-latlon">—</p>
+          <p><strong>Horizonte:</strong> Calculado</p>
+          <p><strong>Base de datos:</strong> <span id="res-db">—</span></p>
+          <p><strong>Año inicial:</strong> <span id="res-anio-ini">—</span></p>
+          <p><strong>Año final:</strong> <span id="res-anio-fin">—</span></p>
+        </div>
+      </aside>
+
+      <div class="grafica-principal">
+        <h3>Irradiación solar mensual</h3>
+        <canvas id="graficaMensual"></canvas>
+      </div>
+
+      <aside class="perfil-horizonte">
+        <h3>Perfil del horizonte</h3>
+        <div class="horizonte-placeholder"></div>
+        <div class="leyenda-horizonte">
+          <p><span class="linea solida"></span> Altura del horizonte</p>
+          <p><span class="linea discontinua"></span> Elevación solar, Junio</p>
+          <p><span class="linea punteada"></span> Elevación solar, Diciembre</p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+</div>
+<!-- FIN MÓDULO 1 -->
+
+
+<!-- ============================================================ -->
+<!-- MÓDULO 2: PERFIL DE VIVIENDA                                 -->
+<!-- ============================================================ -->
+<div id="modulo2" class="modulo-panel oculto">
+
+  <div class="perfil-titulo">
+    <h1>Perfil de Vivienda</h1>
+    <p>Caracteriza la vivienda y registra todas las cargas eléctricas</p>
+  </div>
+
+  <!-- PASO 2.0: ¿DIVIDIR POR ÁREAS? -->
+  <div id="preguntaAreas" class="pregunta-areas">
+    <h3>¿Deseas dividir la casa por áreas?</h3>
+    <p>Si divides por áreas, podrás asignar cada lámpara y aparato a un espacio específico (sala, cocina, recámara, etc.).</p>
+    <div class="botones-decision">
+      <button id="btnSiAreas" class="btn-decision btn-si">Sí, dividir por áreas</button>
+      <button id="btnNoAreas" class="btn-decision btn-no">No, sin subdivisiones</button>
+    </div>
+  </div>
+
+  <!-- PASO 2.1: DEFINIR ÁREAS -->
+  <div id="definirAreas" class="definir-areas oculto">
+    <h3>Define tus áreas</h3>
+    <p>Añade los espacios de tu vivienda (Sala, Cocina, Recámara, etc.)</p>
+    <div id="listaAreas" class="lista-areas"></div>
+    <button id="btnAgregarArea" class="btn-agregar-area">+ Agregar área</button>
+    <div class="perfil-acciones">
+      <button id="btnVolverPregunta" class="btn-atras">← Atrás</button>
+      <button id="btnConfirmarAreas" class="btn-continuar">Continuar →</button>
+    </div>
+  </div>
+
+  <!-- PASO 2.2: TABS PRINCIPALES -->
+  <div id="contenidoPerfil" class="contenido-perfil oculto">
+
+    <div class="perfil-tabs">
+      <button class="tab-perfil activo" data-tab="vivienda">VIVIENDA</button>
+      <button class="tab-perfil" data-tab="iluminacion">ILUMINACIÓN</button>
+      <button class="tab-perfil" data-tab="aparatos">APARATOS</button>
+      <button class="tab-perfil" data-tab="cargas-esp">CARGAS ESP.</button>
+    </div>
+
+    <!-- TAB: VIVIENDA -->
+    <div id="tab-vivienda" class="tab-panel activo">
+      <div class="form-vivienda">
+        <div class="campo-vivienda">
+          <label>TIPO DE VIVIENDA</label>
+          <select id="tipoVivienda">
+            <option value="nueva">Nueva</option>
+            <option value="usada" selected>Usada / Existente</option>
+            <option value="autonoma">Autónoma</option>
+          </select>
+        </div>
+        <div class="campo-vivienda">
+          <label>NÚMERO DE INTEGRANTES</label>
+          <input type="number" id="numIntegrantes" value="4" min="1" max="20">
+        </div>
+        <div class="campo-vivienda">
+          <label>RECÁMARAS</label>
+          <input type="number" id="numRecamaras" value="3" min="0" max="20">
+        </div>
+        <div class="campo-vivienda">
+          <label>BAÑOS</label>
+          <input type="number" id="numBanos" value="2" min="0" max="10">
+        </div>
+        <div class="campo-vivienda">
+          <label>ÁREAS RECREATIVAS</label>
+          <input type="number" id="numAreasRec" value="0" min="0" max="10">
+        </div>
+        <div class="campo-vivienda areas-check">
+          <label>ÁREAS INCLUIDAS</label>
+          <label class="check-line"><input type="checkbox" id="areaSala" checked> Sala</label>
+          <label class="check-line"><input type="checkbox" id="areaCocina" checked> Cocina</label>
+          <label class="check-line"><input type="checkbox" id="areaComedor" checked> Comedor</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: ILUMINACIÓN -->
+    <div id="tab-iluminacion" class="tab-panel oculto">
+      <div class="tab-iluminacion-header">
+        <p>Registra lámparas por espacio</p>
+        <button id="btnAgregarLampara" class="btn-agregar-inline">+ Agregar lámpara</button>
+      </div>
+      <div id="listaLamparas" class="lista-items"></div>
+    </div>
+
+    <!-- TAB: APARATOS -->
+    <div id="tab-aparatos" class="tab-panel oculto">
+      <div class="tab-iluminacion-header">
+        <p>Registra los aparatos eléctricos de cada espacio</p>
+        <button id="btnAgregarAparato" class="btn-agregar-inline">+ Agregar aparato</button>
+      </div>
+      <div id="listaAparatos" class="lista-items"></div>
+    </div>
+
+    <!-- TAB: CARGAS ESPECIALES -->
+    <div id="tab-cargas-esp" class="tab-panel oculto">
+      <div class="card-carga-esp">
+        <div>
+          <h4>Aire Acondicionado</h4>
+          <p class="detalle">~1,200W por tonelada de refrigeración</p>
+        </div>
+        <label class="switch-label">
+          <input type="checkbox" id="chkAC"><span>Activar</span>
+        </label>
+      </div>
+      <div class="card-carga-esp">
+        <div>
+          <h4>Calentador Eléctrico de Agua</h4>
+          <p class="detalle">Resistencia eléctrica</p>
+        </div>
+        <label class="switch-label">
+          <input type="checkbox" id="chkCalentador"><span>Activar</span>
+        </label>
+      </div>
+      <div class="card-carga-esp">
+        <div>
+          <h4>Vehículo Eléctrico</h4>
+          <p class="detalle">kWh por carga completa</p>
+        </div>
+        <label class="switch-label">
+          <input type="checkbox" id="chkVE"><span>Activar</span>
+        </label>
+      </div>
+      <div class="row-cargas-esp">
+        <div class="card-carga-esp small">
+          <div><h4>Lavadora</h4></div>
+          <label class="switch-label">
+            <input type="checkbox" id="chkLavadora"><span>Activar</span>
+          </label>
+        </div>
+        <div class="card-carga-esp small">
+          <div><h4>Secadora</h4></div>
+          <label class="switch-label">
+            <input type="checkbox" id="chkSecadora"><span>Activar</span>
+          </label>
+        </div>
+      </div>
+      <div id="detalleCargasEsp" class="detalle-cargas-esp"></div>
+    </div>
+
+    <div class="perfil-acciones">
+      <button id="btnAtrasPerfil" class="btn-atras">← Atrás</button>
+      <button id="btnContinuarPerfil" class="btn-continuar">Continuar →</button>
+    </div>
+
+  </div>
+</div>
+<!-- FIN MÓDULO 2 -->
+
+
+<!-- ============================================================ -->
+<!-- MÓDULO 3: SELECCIÓN DE TECNOLOGÍA (placeholder)              -->
+<!-- ============================================================ -->
+<div id="modulo3" class="modulo-panel oculto">
+  <div class="modulo-placeholder">
+    <div class="placeholder-icon">🔬</div>
+    <h2>Módulo de Selección de Tecnología (M4)</h2>
+    <p>Este módulo permitirá comparar las tecnologías fotovoltaicas:</p>
+    <ul class="placeholder-lista">
+      <li><strong>TOPCon</strong> — Eficiencia 22–24%, ideal para climas cálidos</li>
+      <li><strong>Mono PERC</strong> — Eficiencia 20–22%, mejor costo-beneficio</li>
+      <li><strong>Bifacial</strong> — Eficiencia 21–23%, mejor para sitios con albedo alto</li>
+      <li><strong>HJT (Heterojunción)</strong> — Eficiencia 23–25%, para climas extremos</li>
+    </ul>
+    <p class="placeholder-nota">🔨 Módulo en desarrollo — disponible próximamente</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- MÓDULO 4: RESULTADOS DEL DIMENSIONAMIENTO (placeholder)      -->
+<!-- ============================================================ -->
+<div id="modulo4" class="modulo-panel oculto">
+  <div class="modulo-placeholder">
+    <div class="placeholder-icon">📄</div>
+    <h2>Resultados del Dimensionamiento (M5)</h2>
+    <p>Este módulo generará automáticamente los artefactos técnicos:</p>
+    <ul class="placeholder-lista">
+      <li><strong>Memoria de cálculo</strong> en formato Word (.docx) y PDF</li>
+      <li><strong>Ficha técnica</strong> del sistema FV dimensionado</li>
+      <li><strong>Análisis económico</strong> con ahorro mensual y período de retorno</li>
+    </ul>
+    <p class="placeholder-nota">🔨 Módulo en desarrollo — disponible próximamente</p>
+  </div>
+</div>
+
+
+<!-- Scripts -->
+<script src="js/map.js"></script>
+<script src="js/pvgis.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/perfilVivienda.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
