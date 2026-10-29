@@ -1,2 +1,1 @@
-# SISTEMAFV
 # SistemaFotovoltaico
