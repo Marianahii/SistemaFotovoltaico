@@ -70,11 +70,10 @@
 </nav>
 
 <!-- ============================================================ -->
-<!-- MÓDULO 1: SISTEMA FV (lo que ya teníamos)                    -->
+<!-- MÓDULO 1: SISTEMA FV                                         -->
 <!-- ============================================================ -->
 <div id="modulo1" class="modulo-panel activo">
 
-  <!-- Aquí va TODO el contenido anterior del <main class="app-layout"> -->
   <main class="app-layout">
 
     <section class="panel-mapa">
@@ -306,17 +305,11 @@
           <label>ÁREAS RECREATIVAS</label>
           <input type="number" id="numAreasRec" value="0" min="0" max="10">
         </div>
-        <div class="campo-vivienda areas-check">
-          <label>ÁREAS INCLUIDAS</label>
-          <label class="check-line"><input type="checkbox" id="areaSala" checked> Sala</label>
-          <label class="check-line"><input type="checkbox" id="areaCocina" checked> Cocina</label>
-          <label class="check-line"><input type="checkbox" id="areaComedor" checked> Comedor</label>
-        </div>
       </div>
     </div>
 
     <!-- TAB: ILUMINACIÓN -->
-    <div id="tab-iluminacion" class="tab-panel oculto">
+    <div id="tab-iluminacion" class="tab-panel ">
       <div class="tab-iluminacion-header">
         <p>Registra lámparas por espacio</p>
         <button id="btnAgregarLampara" class="btn-agregar-inline">+ Agregar lámpara</button>
@@ -325,16 +318,26 @@
     </div>
 
     <!-- TAB: APARATOS -->
-    <div id="tab-aparatos" class="tab-panel oculto">
-      <div class="tab-iluminacion-header">
-        <p>Registra los aparatos eléctricos de cada espacio</p>
-        <button id="btnAgregarAparato" class="btn-agregar-inline">+ Agregar aparato</button>
+    <div id="tab-aparatos" class="tab-panel">
+      
+      <!-- Catálogo -->
+      <div class="catalogo-section">
+        <p class="section-label">Base de datos de aparatos — selecciona y configura</p>
+        <div id="catalogoAparatos" class="catalogo-grid"></div>
       </div>
-      <div id="listaAparatos" class="lista-items"></div>
+
+      <!-- Lista de seleccionados -->
+      <div class="seleccionados-section">
+        <p class="section-label">APARATOS SELECCIONADOS</p>
+        <div id="listaAparatos" class="lista-items-seleccionados"></div>
+      </div>
+
     </div>
 
-    <!-- TAB: CARGAS ESPECIALES -->
-    <div id="tab-cargas-esp" class="tab-panel oculto">
+    <!-- TAB: CARGAS ESPECIALES (ACTUALIZADO) -->
+    <div id="tab-cargas-esp" class="tab-panel">
+      
+      <!-- AC -->
       <div class="card-carga-esp">
         <div>
           <h4>Aire Acondicionado</h4>
@@ -344,6 +347,9 @@
           <input type="checkbox" id="chkAC"><span>Activar</span>
         </label>
       </div>
+      <div id="detalleAC" class="detalle-carga-config"></div>
+
+      <!-- Calentador -->
       <div class="card-carga-esp">
         <div>
           <h4>Calentador Eléctrico de Agua</h4>
@@ -353,6 +359,9 @@
           <input type="checkbox" id="chkCalentador"><span>Activar</span>
         </label>
       </div>
+      <div id="detalleCalentador" class="detalle-carga-config"></div>
+
+      <!-- Vehículo -->
       <div class="card-carga-esp">
         <div>
           <h4>Vehículo Eléctrico</h4>
@@ -362,21 +371,35 @@
           <input type="checkbox" id="chkVE"><span>Activar</span>
         </label>
       </div>
+      <div id="detalleVE" class="detalle-carga-config"></div>
+
+      <!-- Lavadora y Secadora (Agrupadas para que los inputs queden abajo) -->
       <div class="row-cargas-esp">
-        <div class="card-carga-esp small">
-          <div><h4>Lavadora</h4></div>
-          <label class="switch-label">
-            <input type="checkbox" id="chkLavadora"><span>Activar</span>
-          </label>
+        
+        <!-- Columna Lavadora -->
+        <div class="col-carga-esp">
+          <div class="card-carga-esp small">
+            <div><h4>Lavadora</h4></div>
+            <label class="switch-label">
+              <input type="checkbox" id="chkLavadora"><span>Activar</span>
+            </label>
+          </div>
+          <div id="detalleLavadora" class="detalle-carga-config"></div>
         </div>
-        <div class="card-carga-esp small">
-          <div><h4>Secadora</h4></div>
-          <label class="switch-label">
-            <input type="checkbox" id="chkSecadora"><span>Activar</span>
-          </label>
+
+        <!-- Columna Secadora -->
+        <div class="col-carga-esp">
+          <div class="card-carga-esp small">
+            <div><h4>Secadora</h4></div>
+            <label class="switch-label">
+              <input type="checkbox" id="chkSecadora"><span>Activar</span>
+            </label>
+          </div>
+          <div id="detalleSecadora" class="detalle-carga-config"></div>
         </div>
+
       </div>
-      <div id="detalleCargasEsp" class="detalle-cargas-esp"></div>
+
     </div>
 
     <div class="perfil-acciones">
@@ -392,7 +415,7 @@
 <!-- ============================================================ -->
 <!-- MÓDULO 3: SELECCIÓN DE TECNOLOGÍA (placeholder)              -->
 <!-- ============================================================ -->
-<div id="modulo3" class="modulo-panel oculto">
+<div id="modulo3" class="modulo-panel ">
   <div class="modulo-placeholder">
     <div class="placeholder-icon">🔬</div>
     <h2>Módulo de Selección de Tecnología (M4)</h2>
@@ -411,7 +434,7 @@
 <!-- ============================================================ -->
 <!-- MÓDULO 4: RESULTADOS DEL DIMENSIONAMIENTO (placeholder)      -->
 <!-- ============================================================ -->
-<div id="modulo4" class="modulo-panel oculto">
+<div id="modulo4" class="modulo-panel ">
   <div class="modulo-placeholder">
     <div class="placeholder-icon">📄</div>
     <h2>Resultados del Dimensionamiento (M5)</h2>
